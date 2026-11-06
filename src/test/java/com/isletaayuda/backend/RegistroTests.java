@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.url=jdbc:h2:mem:registro_test;MODE=MariaDB;DB_CLOSE_DELAY=-1"
 })
 @AutoConfigureMockMvc
-class RegistroTests {
+class RegistroTests extends SeguridadTestSupport {
 
     private static final String PASSWORD = "Clave ficticia segura 2026";
 
@@ -163,15 +163,15 @@ class RegistroTests {
     }
 
     @Test
-    void loginSigueCerrado() throws Exception {
+    void loginPublicoValidaLosCampos() throws Exception {
         mvc.perform(post("/api/auth/login").contentType(APPLICATION_JSON).content("{}"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void inclusoUnUsuarioAutenticadoTieneCerradasLasDemasRutas() throws Exception {
-        mvc.perform(get("/api/auth/me")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/recursos")).andExpect(status().isForbidden());
     }
 
     @Test

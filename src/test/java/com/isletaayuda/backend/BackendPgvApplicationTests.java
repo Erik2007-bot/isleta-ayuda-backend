@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(properties = "spring.config.location=classpath:persistence-test.properties")
-class BackendPgvApplicationTests {
+class BackendPgvApplicationTests extends SeguridadTestSupport {
 
 	@Test
 	void contextLoads() {
