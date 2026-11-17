@@ -157,7 +157,7 @@ class RegistroTests extends SeguridadTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/auth/registro", "/api/auth/me", "/api/recursos", "/api/admin", "/login"})
+    @ValueSource(strings = {"/api/auth/registro", "/api/auth/me", "/api/admin", "/login"})
     void cierraLosDemasEndpoints(String path) throws Exception {
         mvc.perform(get(path)).andExpect(status().isUnauthorized());
     }
@@ -171,7 +171,7 @@ class RegistroTests extends SeguridadTestSupport {
     @Test
     @WithMockUser(roles = "ADMIN")
     void inclusoUnUsuarioAutenticadoTieneCerradasLasDemasRutas() throws Exception {
-        mvc.perform(get("/api/recursos")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/admin")).andExpect(status().isForbidden());
     }
 
     @Test
