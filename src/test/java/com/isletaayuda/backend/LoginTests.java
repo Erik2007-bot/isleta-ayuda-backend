@@ -160,10 +160,16 @@ class LoginTests extends SeguridadTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/recursos", "/api/admin", "/api/auth/desconocido"})
+    @ValueSource(strings = {"/api/admin", "/api/auth/desconocido"})
     void tokenValidoNoAbreLasDemasRutas(String path) throws Exception {
         mvc.perform(get(path).header("Authorization", "Bearer " + login()))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void recursosPermiteUnTokenValido() throws Exception {
+        mvc.perform(get("/api/recursos").header("Authorization", "Bearer " + login()))
+                .andExpect(status().isOk());
     }
 
     @ParameterizedTest
