@@ -3,6 +3,7 @@ package com.isletaayuda.backend.auth;
 import com.isletaayuda.backend.auth.dto.LoginRequest;
 import com.isletaayuda.backend.auth.dto.LoginResponse;
 import com.isletaayuda.backend.auth.dto.PerfilUsuarioResponse;
+import com.isletaayuda.backend.model.Usuario;
 import com.isletaayuda.backend.repository.UsuarioRepository;
 import com.isletaayuda.backend.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,8 +34,22 @@ public class LoginService {
 
     @Transactional(readOnly = true)
     public PerfilUsuarioResponse perfil(String subject) {
-        var usuario = usuarios.findById(Integer.valueOf(subject))
+        return crearPerfil(buscarUsuario(subject));
+    }
+
+    @Transactional
+    public PerfilUsuarioResponse actualizarNombre(String subject, String nombre) {
+        Usuario usuario = buscarUsuario(subject);
+        usuario.setNombre(nombre.strip());
+        return crearPerfil(usuario);
+    }
+
+    private Usuario buscarUsuario(String subject) {
+        return usuarios.findById(Integer.valueOf(subject))
                 .orElseThrow(() -> new BadCredentialsException("Usuario no disponible"));
+    }
+
+    private PerfilUsuarioResponse crearPerfil(Usuario usuario) {
         return new PerfilUsuarioResponse(usuario.getIdUsuario(), usuario.getNombre(),
                 usuario.getEmail(), usuario.getRol());
     }
