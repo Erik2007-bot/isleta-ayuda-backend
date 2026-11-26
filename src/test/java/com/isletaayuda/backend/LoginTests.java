@@ -5,6 +5,7 @@ import com.isletaayuda.backend.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import javax.sql.DataSource;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -159,6 +161,51 @@ class LoginTests extends SeguridadTestSupport {
                 .andExpect(jsonPath("$.nombre").value("Nombre actualizado"));
     }
 
+    @Test
+    void actualizaElNombreDelUsuarioDelToken() throws Exception {
+        mvc.perform(put("/api/auth/me/nombre").header("Authorization", "Bearer " + login())
+                        .header("Origin", FRONTEND)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"nombre": "  Ana Maria  "}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", FRONTEND))
+                .andExpect(jsonPath("$.idUsuario").value(idUsuario))
+                .andExpect(jsonPath("$.nombre").value("Ana Maria"))
+                .andExpect(jsonPath("$.email").value(EMAIL))
+                .andExpect(jsonPath("$.rol").value("USER"));
+
+        assertThat(usuarios.findById(idUsuario).orElseThrow().getNombre()).isEqualTo("Ana Maria");
+    }
+
+    @ParameterizedTest
+    @MethodSource("cuerposConNombreInvalido")
+    void rechazaNombreInvalido(String body) throws Exception {
+        mvc.perform(put("/api/auth/me/nombre").header("Authorization", "Bearer " + login())
+                        .contentType(APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errores.nombre").isString());
+
+        assertThat(usuarios.findById(idUsuario).orElseThrow().getNombre()).isEqualTo("Ana");
+    }
+
+    private static Stream<String> cuerposConNombreInvalido() {
+        return Stream.of("{}", "{\"nombre\":\"   \"}",
+                "{\"nombre\":\"%s\"}".formatted("a".repeat(101)));
+    }
+
+    @Test
+    void actualizarNombreRequiereToken() throws Exception {
+        mvc.perform(put("/api/auth/me/nombre").contentType(APPLICATION_JSON)
+                        .content("""
+                                {"nombre": "Ana Maria"}
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(usuarios.findById(idUsuario).orElseThrow().getNombre()).isEqualTo("Ana");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"/api/admin", "/api/auth/desconocido"})
     void tokenValidoNoAbreLasDemasRutas(String path) throws Exception {
@@ -210,6 +257,15 @@ class LoginTests extends SeguridadTestSupport {
         mvc.perform(post("/api/auth/registro").header("Origin", "https://otro.example")
                         .contentType(APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void corsAceptaPreflightParaActualizarNombre() throws Exception {
+        mvc.perform(options("/api/auth/me/nombre").header("Origin", FRONTEND)
+                        .header("Access-Control-Request-Method", "PUT")
+                        .header("Access-Control-Request-Headers", "content-type, authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", FRONTEND));
     }
 
     private String login() throws Exception {

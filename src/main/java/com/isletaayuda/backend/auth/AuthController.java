@@ -1,5 +1,6 @@
 package com.isletaayuda.backend.auth;
 
+import com.isletaayuda.backend.auth.dto.ActualizarNombreRequest;
 import com.isletaayuda.backend.auth.dto.LoginRequest;
 import com.isletaayuda.backend.auth.dto.LoginResponse;
 import com.isletaayuda.backend.auth.dto.PerfilUsuarioResponse;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -42,5 +44,11 @@ public class AuthController {
     @GetMapping("/me")
     public PerfilUsuarioResponse me(@AuthenticationPrincipal Jwt jwt) {
         return loginService.perfil(jwt.getSubject());
+    }
+
+    @PutMapping("/me/nombre")
+    public PerfilUsuarioResponse actualizarNombre(@AuthenticationPrincipal Jwt jwt,
+                                                  @Valid @RequestBody ActualizarNombreRequest solicitud) {
+        return loginService.actualizarNombre(jwt.getSubject(), solicitud.nombre());
     }
 }
